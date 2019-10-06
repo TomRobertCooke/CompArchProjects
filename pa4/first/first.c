@@ -113,14 +113,9 @@ int main(int argc, char** argv)
         free(srcFile);
         return 0;
     }
-    
-	//printf("inputs processed\n");
 	//E is lines per set, B is the block size in bytes, S is the number of sets
 	int b = powTwo(B), s = powTwo(S);
 	int t = (B * 8) - b - s;
-	
-    //printf("B is %d, S is %d, and E is %d\n", B, S, E);
-	//printf("t: %d, s: %d, b: %d\n", t, s, b);
 
     int pmr = 0, pmw = 0, phits = 0, pmisses = 0, nmr = 0, nmw = 0, nhits = 0, nmisses = 0;
 
@@ -134,8 +129,6 @@ int main(int argc, char** argv)
 		precache[x] = (unsigned long* ) calloc(E, sizeof(long int));
 		noncache[x] = (unsigned long* ) calloc(E, sizeof(long int));
 	}
-	//printf("cache allocated\n");
-	//int shorts = B / 2, int blocks = cacheSize / blockSize;
 	//Could use short ints attached to each other if this becomesa problem
 	
 	
@@ -148,7 +141,6 @@ int main(int argc, char** argv)
 		prevalid[x] = (unsigned short* ) calloc(E, sizeof(unsigned short));
 		nonvalid[x] = (unsigned short* ) calloc(E, sizeof(unsigned short));
 	}
-	//printf("valid bits allocated\n");
 	
 	//Now we need to implement a data structure for lru
 	//lru is going to be for each individual set, it's going to just be an E size array of integers, dynamically allocated
@@ -161,19 +153,15 @@ int main(int argc, char** argv)
 		nonlru[x] = calloc(E, sizeof(unsigned long));
 		prelru[x] = calloc(E, sizeof(unsigned long));
 	}
-	//printf("lru array allocated\n");
 	
 	//Now input will be read from file
 	
 
 	unsigned long tag, setindex, blockoffset;
 	
-	//int ithappens = 0;
 	
     while (i == 3)
     {
-    	//printf("----------\n");
-    	//printf("line: %d: %c %lx\n", lineNum, mode, slot);
         if (mode != 'R' && mode != 'W') //Input checking
         {
             printf("error\n");
@@ -195,34 +183,14 @@ int main(int argc, char** argv)
 			free(nonvalid);
             return 0;
         }
-        /*if (mode == 'R')
-        {
-            pmr++;
-            nmr++;
-        } else if (mode == 'W')
-        {
-        	pmw++;
-        	nmw++;
-        }*/
         
         //save the tag, block offset, and set index
         blockoffset = (slot) & (power(2, b) - 1);
-		setindex = (slot >> b) & (power(2, s) - 1);
-		tag = ((slot >> b) >> s) & (power(2, t) - 1);
-		/*if (lineNum == 1)
-		{
-			printf("%u %u %u\n", t, s, b);
-			printf("and %lu %lu %lu\n", (power(2, t) - 1), (power(2, s) - 1), (power(2, b) - 1));
-			printf("for %lx\n", slot);
-			printf("tag is %lx, set index is %lx, and block offset is %lx\n", tag, setindex, blockoffset);
-		}*/
+	setindex = (slot >> b) & (power(2, s) - 1);
+	tag = ((slot >> b) >> s) & (power(2, t) - 1);
 		
-		
-		//if (setindex == 1) printf("----------------------------\n");
-    	//printf("%lu %lu %lu\n", tag, setindex, blockoffset);
-		
-		//If it is a hit, hit will become 1, 0 otherwise
-		int hit;
+	//If it is a hit, hit will become 1, 0 otherwise
+	int hit;
 		
 		
         //Without Prefetch
@@ -242,11 +210,9 @@ int main(int argc, char** argv)
 			} else
 			{
 				//cold miss, empty slot
-				
 				break;
 			}
 		}
-		//printf("hit: %d\n", hit);
 		//if not found, miss
 		//if miss, replace the back of the lru queue with it
 		//if write miss, add one memory read
@@ -254,7 +220,6 @@ int main(int argc, char** argv)
 		
 		if (!hit)
 		{
-			//if (setindex == 1) printf("miss %lu\n", tag);
 			if (*(nonvalid[setindex]) == 0)
 			{
 				*(nonlru[setindex]) = tag;
@@ -341,24 +306,6 @@ int main(int argc, char** argv)
 			
 			nhits++;
 		}
-		/*if (setindex == 0){
-			printf("Cache array: ");
-			int g = 0;
-			while (g < E && *(nonvalid[setindex] + g) == 1)
-			{
-				printf("%lx ", ((*(noncache[setindex] + g) >> b) >> s) & (power(2, t) - 1));
-				g++;
-			}
-			printf("\n");
-			printf("LRU array: ");
-			g = 0;
-			while (g < E && *(nonvalid[setindex] + g) == 1)
-			{
-				printf("%lx ", *(nonlru[setindex] + g));
-				g++;
-			}
-			printf("\n-----------------------------------------\n");
-		}*/
 		
 		
 		
@@ -382,7 +329,6 @@ int main(int argc, char** argv)
 				break;
 			}
 		}
-		//printf("hit: %d\n", hit);
 		//if not found, miss
 		//if miss, replace the back of the lru queue with it
 		//if write miss, add one memory read
@@ -525,7 +471,6 @@ int main(int argc, char** argv)
 			pmisses++;
 		} else
 		{
-			//if (setindex == 1) printf("hit %lu\n", tag);
 			if (E > 1)
 			{
 				//remove the tag from the lru and insert it at the back
@@ -547,11 +492,9 @@ int main(int argc, char** argv)
 			{
 				pmw++;
 			}
-			//if E is 1 then do nothing, it already is the lru and mru
 			
 			phits++;
 		}
-        //printf("%c %lx\n", mode, slot);
         i = fscanf(srcFile, "\n%lx: %c %lx", &instruction, &mode, &slot);
         lineNum++;
     }
@@ -574,9 +517,6 @@ int main(int argc, char** argv)
         printf("error\n");
     }
 
-	//printf("It happens %d times\n", ithappens);
-
-	//./first 32 assoc:2 lru 4 test.txt
 	
 	free(srcFile);
 	free(line);
